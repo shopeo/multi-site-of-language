@@ -108,3 +108,38 @@ if ( ! function_exists( 'site_switch_of_language_dynamic_block_test' ) ) {
 	function site_switch_of_language_dynamic_block_test( $attributes ) {
 	}
 }
+
+if ( ! function_exists( 'is_multisite_enabled' ) ) {
+	/**
+	 * Check if multisite is enabled
+	 *
+	 * @return bool
+	 */
+	function is_multisite_enabled() {
+		if ( defined( 'MULTISITE' ) && MULTISITE ) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+}
+
+if ( ! function_exists( 'multi_site_validate_site_data' ) ) {
+	function multi_site_validate_site_data( $errors, $data, $old_site ) {
+		error_log( print_r( $data, true ) );
+		error_log( print_r( $old_site, true ) );
+		if ( $_POST['WPLANG'] && $_POST['WPLANG'] != '' ) {
+			$lang  = sanitize_text_field( $_POST['WPLANG'] );
+			$sites = get_sites( array( 'number' => 0 ) );
+			foreach ( $sites as $site ) {
+				if ( get_blog_option( $site->blog_id, 'WPLANG' ) == $lang ) {
+					$errors->add( 'site_language_already', __( 'This site language is already assigned to another site. Please choose a different language.', 'multi-site-of-language' ) );
+				}
+			}
+		} else {
+			$errors->add( 'site_empty_language', __( 'Site language must not be empty.', 'multi-site-of-language' ) );
+		}
+	}
+}
+
+add_action( 'wp_validate_site_data', 'multi_site_validate_site_data', 10, 3 );
